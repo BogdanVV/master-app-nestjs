@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/User';
 import { UpdateUserDto } from './dto/UpdateUserDto';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class UsersService {
@@ -73,13 +74,12 @@ export class UsersService {
       ...updateBody,
       ...(avatar && { avatarUrl: `somesite.com/${avatar.originalname}` }),
     });
-    console.log('result>>>', result);
     if (result.affected === 1) {
-      console.log('********************************************');
-
       return this.usersRepo.findOne({ where: { id } });
     } else {
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException(
+        'unknown error while updating the user. check the logs',
+      );
     }
   }
 
@@ -94,5 +94,11 @@ export class UsersService {
     });
 
     return users;
+  }
+
+  async deleteUser(id: string) {
+    await this.usersRepo.update(id, {
+      deleteAt: dayjs(new Date()).add(3, 'days'),
+    });
   }
 }

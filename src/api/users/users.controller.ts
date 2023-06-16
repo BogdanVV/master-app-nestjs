@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
@@ -58,5 +59,10 @@ export class UsersController {
     }
 
     return this.usersService.updateUser(id, updateBody, avatar);
+  }
+
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
   }
 }

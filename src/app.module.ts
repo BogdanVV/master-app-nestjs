@@ -3,6 +3,7 @@ import { AuthModule } from './api/auth/auth.module';
 import { UsersModule } from './api/users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './api/users/entities/User';
+import 'dotenv/config';
 
 @Module({
   imports: [
