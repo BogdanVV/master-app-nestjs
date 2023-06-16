@@ -11,10 +11,10 @@ import 'dotenv/config';
     UsersModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
+      host: process.env.DB_HOST || 'localhost',
       port: 5432,
-      username: 'postgres',
-      password: 'password123',
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
       database: 'postgres',
       entities: [User],
       synchronize: true,
