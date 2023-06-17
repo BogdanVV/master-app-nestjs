@@ -52,6 +52,17 @@ export class UsersService {
   async getUserByEmail(email: string): Promise<User> {
     const user = await this.usersRepo.findOne({
       where: { email },
+      select: [
+        'id',
+        'avatarUrl',
+        'email',
+        'name',
+        'password',
+        'isActive',
+        'updatedAt',
+        'createdAt',
+        'deleteAt',
+      ],
     });
 
     if (!user) {

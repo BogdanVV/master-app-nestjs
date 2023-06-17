@@ -11,14 +11,20 @@ import {
   Post,
   Put,
   Query,
+  Req,
+  UnauthorizedException,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/CreateUserDto';
 import { UpdateUserDto } from './dto/UpdateUserDto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { ReqWithUser } from '../types';
 
+@UseGuards(AuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -53,9 +59,16 @@ export class UsersController {
     avatar: Express.Multer.File,
     @Param('id') id: string,
     @Body() updateBody: UpdateUserDto,
+    @Req() req: ReqWithUser,
   ) {
     if (Object.values(updateBody).length === 0 && !avatar) {
       throw new BadRequestException('the body is empty');
+    }
+
+    if (req.user.sub !== id) {
+      throw new UnauthorizedException(
+        'you are not allowed to change the other user',
+      );
     }
 
     return this.usersService.updateUser(id, updateBody, avatar);
