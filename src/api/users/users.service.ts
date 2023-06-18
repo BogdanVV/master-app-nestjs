@@ -6,10 +6,9 @@ import {
 import { CreateUserDto } from './dto/CreateUserDto';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/User';
 import { UpdateUserDto } from './dto/UpdateUserDto';
-import * as dayjs from 'dayjs';
 
 @Injectable()
 export class UsersService {
@@ -37,20 +36,15 @@ export class UsersService {
     return result.identifiers?.[0]?.id;
   }
 
-  async getUserById(id: string): Promise<User> {
-    const user = await this.usersRepo.findOne({
+  async getUserById(id: string): Promise<User | null> {
+    return this.usersRepo.findOne({
       where: { id },
     });
-
-    if (!user) {
-      throw new NotFoundException('the user does not exist');
-    }
-
-    return user;
   }
 
-  async getUserByEmail(email: string): Promise<User> {
-    const user = await this.usersRepo.findOne({
+  // for login
+  async getUserByEmail(email: string): Promise<User | null> {
+    return this.usersRepo.findOne({
       where: { email },
       select: [
         'id',
@@ -64,12 +58,6 @@ export class UsersService {
         'deleteAt',
       ],
     });
-
-    if (!user) {
-      throw new NotFoundException();
-    }
-
-    return user;
   }
 
   async updateUser(
@@ -107,9 +95,11 @@ export class UsersService {
     return users;
   }
 
-  async deleteUser(id: string) {
-    await this.usersRepo.update(id, {
-      deleteAt: dayjs(new Date()).add(3, 'days'),
-    });
+  async deleteUser(id: string): Promise<UpdateResult> {
+    return this.usersRepo.softDelete(id);
+  }
+
+  async restoreUser(id: string): Promise<UpdateResult> {
+    return this.usersRepo.restore(id);
   }
 }

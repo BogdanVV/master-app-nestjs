@@ -6,6 +6,7 @@ import {
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
+  NotFoundException,
   Param,
   ParseFilePipe,
   Post,
@@ -31,7 +32,12 @@ export class UsersController {
 
   @Get(':id')
   async findUserById(@Param('id') id: string) {
-    return this.usersService.getUserById(id);
+    const user = await this.usersService.getUserById(id);
+    if (!user) {
+      throw new NotFoundException('the user does not exist or was deleted');
+    }
+
+    return user;
   }
 
   @Get('')
@@ -74,8 +80,21 @@ export class UsersController {
     return this.usersService.updateUser(id, updateBody, avatar);
   }
 
+  // soft delete by setting `deleteAt` column to current date
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
-    return this.usersService.deleteUser(id);
+    const result = await this.usersService.deleteUser(id);
+    if (!result.affected) {
+      throw new NotFoundException();
+    }
+  }
+
+  // restoring the user by setting `deleteAt` column to null
+  @Put('restore/:id')
+  async restoreUser(@Param('id') id: string) {
+    const result = await this.usersService.restoreUser(id);
+    if (!result.affected) {
+      throw new NotFoundException();
+    }
   }
 }
