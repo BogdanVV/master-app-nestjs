@@ -79,7 +79,6 @@ export class UsersService {
     }
   }
 
-  // TODO: protect with guard for user roles
   async getAllUsers(page: number, size: number): Promise<User[]> {
     const users = await this.usersRepo.find({
       take: size,
