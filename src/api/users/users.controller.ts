@@ -22,7 +22,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/CreateUserDto';
 import { UpdateUserDto } from './dto/UpdateUserDto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ReqWithUser } from '../types';
+import { ReqWithUser } from '../../types';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
