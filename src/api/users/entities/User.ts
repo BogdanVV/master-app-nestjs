@@ -7,6 +7,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+enum UserRoles {
+  ADMIN = 'admin',
+  USER = 'user',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -26,6 +31,14 @@ export class User {
 
   @Column('bool', { default: true })
   isActive: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: UserRoles,
+    array: true,
+    default: [UserRoles.USER],
+  })
+  roles: string[];
 
   @CreateDateColumn()
   createdAt: Date;

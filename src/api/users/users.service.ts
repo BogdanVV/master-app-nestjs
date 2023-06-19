@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateUserDto } from './dto/CreateUserDto';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -53,6 +49,7 @@ export class UsersService {
         'name',
         'password',
         'isActive',
+        'roles',
         'updatedAt',
         'createdAt',
         'deleteAt',

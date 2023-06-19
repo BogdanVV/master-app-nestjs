@@ -19,16 +19,7 @@ export class AuthService {
 
   // TODO: any
   async login(loginDto: LoginDto): Promise<{ accessToken: string; user: any }> {
-    // TODO: save user in db
-    const user = await this.usersService.getUserByEmail(loginDto.email);
-    if (!user) {
-      throw new NotFoundException('the user does not exist or was deleted');
-    }
-
-    const isPasswordsMatch = bcrypt.compare(loginDto.password, user.password);
-    if (!isPasswordsMatch) {
-      throw new UnauthorizedException('invalid credentials');
-    }
+    const user = await this.validateUser(loginDto.email, loginDto.password);
     const accessToken = await this.jwtService.signAsync(
       {
         sub: user.id,
@@ -38,10 +29,24 @@ export class AuthService {
       { secret: process.env.JWT_SECRET, expiresIn: '30d' },
     );
 
-    return { user: omitProp(user, ['password']), accessToken };
+    return { user, accessToken };
   }
 
   async signUp() {
     return '';
+  }
+
+  async validateUser(email: string, password: string) {
+    const user = await this.usersService.getUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException('the user does not exist or was deleted');
+    }
+
+    const isPasswordsMatch = bcrypt.compare(password, user.password);
+    if (!isPasswordsMatch) {
+      throw new UnauthorizedException('invalid password');
+    }
+
+    return omitProp(user, ['password']);
   }
 }
