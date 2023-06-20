@@ -24,6 +24,8 @@ import { UpdateUserDto } from './dto/UpdateUserDto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ReqWithUser } from '../../types';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { avatarStorageConfig } from 'src/utils/filesUploading';
+import { Request } from 'express';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -46,12 +48,26 @@ export class UsersController {
   }
 
   @Post('')
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createUser(createUserDto);
+  @UseInterceptors(FileInterceptor('avatar'))
+  async createUser(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({ fileType: /jpg|jpeg|png$/ }),
+          new MaxFileSizeValidator({ maxSize: 2000000 }), // 2MB
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    avatar: Express.Multer.File,
+    @Body() createUserDto: CreateUserDto,
+    @Req() req: Request,
+  ) {
+    return this.usersService.createUser(createUserDto, req, avatar);
   }
 
   @Put(':id')
-  @UseInterceptors(FileInterceptor('avatar'))
+  @UseInterceptors(FileInterceptor('avatar', avatarStorageConfig))
   async updateUser(
     @UploadedFile(
       new ParseFilePipe({
@@ -70,14 +86,22 @@ export class UsersController {
     if (Object.values(updateBody).length === 0 && !avatar) {
       throw new BadRequestException('the body is empty');
     }
-
-    if (req.user.sub !== id) {
+    if (req.user.id !== id) {
       throw new UnauthorizedException(
         'you are not allowed to change the other user',
       );
     }
 
-    return this.usersService.updateUser(id, updateBody, avatar);
+    let avatarUrl;
+    if (avatar) {
+      avatarUrl = `http://${
+        req.headers.host
+      }/uploads/avatars/${id}.${avatar.originalname.substring(
+        avatar.originalname.lastIndexOf('.') + 1,
+      )}`;
+    }
+
+    return this.usersService.updateUser(id, updateBody, avatarUrl);
   }
 
   // soft delete by setting `deleteAt` column to current date

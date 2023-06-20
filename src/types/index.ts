@@ -1,5 +1,5 @@
 import { Request } from 'express';
 
 export type ReqWithUser = Request & {
-  user: { sub: string; name: string; iat: number; exp: number };
+  user: { id: string; name: string; email: string; roles: string[] };
 };

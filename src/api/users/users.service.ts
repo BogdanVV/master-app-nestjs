@@ -5,6 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/User';
 import { UpdateUserDto } from './dto/UpdateUserDto';
+import { Request } from 'express';
+import * as fs from 'node:fs';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +18,7 @@ export class UsersService {
 
   async createUser(
     createUserDto: CreateUserDto,
+    req: Request,
     avatar?: Express.Multer.File,
   ): Promise<string> {
     // hash password before saving into db
@@ -22,14 +26,31 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
     createUserDto.password = hashedPassword;
 
-    // TODO: handle avatar if provided
+    const newUuid = uuidv4();
+
     if (avatar) {
-      createUserDto.avatarUrl = `somesite.com/${avatar.originalname}`;
+      const fileName = `${newUuid}.${avatar.originalname.substring(
+        avatar.originalname.lastIndexOf('.') + 1,
+      )}`;
+      createUserDto.avatarUrl = `http://${req.headers.host}/uploads/avatars/${fileName}`;
+
+      await fs.writeFile(
+        `uploads/avatars/${fileName}`,
+        avatar.buffer,
+        (err) => {
+          if (err) {
+            throw new InternalServerErrorException('failed to upload avatar');
+          }
+        },
+      );
     }
 
-    const result = await this.usersRepo.insert(createUserDto);
+    await this.usersRepo.insert({
+      id: newUuid,
+      ...createUserDto,
+    });
 
-    return result.identifiers?.[0]?.id;
+    return newUuid;
   }
 
   async getUserById(id: string): Promise<User | null> {
@@ -60,15 +81,14 @@ export class UsersService {
   async updateUser(
     id: string,
     updateBody: UpdateUserDto,
-    avatar?: Express.Multer.File,
+    avatarUrl?: string,
   ): Promise<User | null> {
     // check if user exists
     await this.getUserById(id);
 
-    // TODO: process file if provided
     const result = await this.usersRepo.update(id, {
       ...updateBody,
-      ...(avatar && { avatarUrl: `somesite.com/${avatar.originalname}` }),
+      ...(avatarUrl && { avatarUrl }),
     });
     if (result.affected === 1) {
       return this.usersRepo.findOne({ where: { id } });

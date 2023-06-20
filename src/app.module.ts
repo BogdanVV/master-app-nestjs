@@ -4,6 +4,8 @@ import { UsersModule } from './api/users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './api/users/entities/User';
 import 'dotenv/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -18,6 +20,13 @@ import 'dotenv/config';
       database: 'postgres',
       entities: [User],
       synchronize: true,
+    }),
+    ServeStaticModule.forRoot({
+      serveStaticOptions: {
+        index: false,
+      },
+      renderPath: 'uploads/',
+      rootPath: join(__dirname, '..'),
     }),
   ],
 })

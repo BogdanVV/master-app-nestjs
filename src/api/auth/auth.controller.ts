@@ -6,6 +6,7 @@ import {
   MaxFileSizeValidator,
   ParseFilePipe,
   Post,
+  Req,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/LoginDto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from 'src/api/users/users.service';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -36,43 +38,15 @@ export class AuthController {
       new ParseFilePipe({
         validators: [
           new FileTypeValidator({ fileType: /jpg|jpeg|png$/ }),
-          new MaxFileSizeValidator({ maxSize: 2000000 }),
+          new MaxFileSizeValidator({ maxSize: 2000000 }), // 2MB
         ],
         fileIsRequired: false,
       }),
     )
     avatar: Express.Multer.File,
     @Body() createUserDto: SignUpDto,
+    @Req() req: Request,
   ): Promise<string> {
-    return this.usersService.createUser(createUserDto, avatar);
+    return this.usersService.createUser(createUserDto, req, avatar);
   }
-
-  // ============================
-  // Type 'typeof AvatarValidationPipe' is missing the following properties from type
-  // 'FileValidator<Record<string, any>>': validationOptions, isValid, buildErrorMessage
-  // ts(2739)
-  // ============================
-  // @Post('sign-up2')
-  // @HttpCode(201)
-  // @UseInterceptors(FileInterceptor('avatar'))
-  // async signUp2(
-  //   @UploadedFile(
-  //     new ParseFilePipe({
-  //       validators: [AvatarValidationPipe],
-  //     }),
-  //   )
-  //   avatar: Express.Multer.File,
-  //   @Body() createUserDto: SignUpDto,
-  // ): Promise<IUser> {
-  //   if (avatar) {
-  //     console.log('avatar>>>', avatar);
-  //   } else {
-  //     console.log('no avatar provided');
-  //   }
-
-  //   console.log('createUserDto>>>', createUserDto);
-  //   const user = await this.usersService.createUser(createUserDto, avatar);
-
-  //   return user;
-  // }
 }
